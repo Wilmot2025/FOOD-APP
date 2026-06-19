@@ -134,11 +134,107 @@ def view_cart():
     print(f"Total: ${total:.2f}") # Corrected indentation and used f-string
     print("\n")
     
+
 def checkout():
     print("\n****Checkout****\n")
+    
+    # Check if cart is empty
+    if not cart:
+        print("Your cart is empty. Please add items before checkout.")
+        return
+    
+    # Display cart contents
     view_cart()
-    print("Thank you for shopping with WIL & HONEY!!!!!")
-    print("\n")
+    
+    # Payment processing
+    print("\nPlease select your payment method:")
+    print("1. Credit Card")
+    print("2. Cash")
+    payment_method = input("Enter your choice (1 or 2): ")
+    
+    max_retries = 3
+    retry_count = 0
+    
+    while retry_count < max_retries:
+        try:
+            # Validate payment method
+            if payment_method not in ["1", "2"]:
+                raise ValueError("Invalid payment method selected.")
+            
+            # Get payment details
+            if payment_method == "1":
+                card_number = input("Enter your credit card number: ")
+                if len(card_number) != 16 or not card_number.isdigit():
+                    raise ValueError("Invalid credit card number.")
+                expiry_date = input("Enter expiry date (MM/YY): ")
+                cvv = input("Enter CVV: ")
+                if len(cvv) != 3 or not cvv.isdigit():
+                    raise ValueError("Invalid CVV.")
+            
+            # Calculate total
+            total = calculate_total()
+            
+            # Confirm transaction
+            print("\nPlease confirm your transaction:")
+            confirm = input("Enter 'yes' to confirm or 'no' to cancel: ").lower()
+            
+            if confirm == 'yes':
+                # Simulate payment processing
+                payment_successful = process_payment(payment_method, total)
+                
+                if payment_successful:
+                    print(f"\nPayment of ${total:.2f} processed successfully.")
+                    print("Thank you for shopping with WIL & HONEY!!!!!")
+                    # Clear cart after successful payment
+                    cart.clear()
+                    print("\nYour order has been placed successfully.")
+                    return
+                else:
+                    print("\nPayment failed. Please try again.")
+                    retry_count += 1
+                    if retry_count < max_retries:
+                        print(f"You have {max_retries - retry_count} attempts remaining.")
+                        print("\nWould you like to:")
+                        print("1. Try payment again")
+                        print("2. Change payment method")
+                        print("3. Cancel checkout")
+                        choice = input("Enter your choice (1-3): ")
+                        
+                        if choice == "1":
+                            continue
+                        elif choice == "2":
+                            payment_method = input("Enter your choice (1 or 2): ")
+                            continue
+                        else:
+                            print("Transaction cancelled.")
+                            return
+                    else:
+                        print("Maximum retry attempts reached. Please try again later.")
+                        return
+            else:
+                print("Transaction cancelled.")
+                return
+                
+        except ValueError as e:
+            print(f"Error: {e}")
+            retry_count += 1
+            if retry_count < max_retries:
+                print(f"You have {max_retries - retry_count} attempts remaining.")
+                continue
+            else:
+                print("Maximum retry attempts reached. Please try again later.")
+                return
+        except Exception as e:
+            print(f"An unexpected error occurred: {e}")
+            print("Please contact customer service.")
+            return
+
+def process_payment(method, amount):
+    """Simulate payment processing"""
+    import random
+    # Simulate random payment success/failure
+    return random.choice([True, True, False])  # 66% success rate
+
 
 def get_sku_and_quantity(sku_prompt, quantity_prompt=None):
     item_sku = input(sku_prompt)
