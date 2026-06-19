@@ -3911,6 +3911,196 @@ def modify_user_access():
     
     else:
         print("Invalid choice.")
+def generate_sales_report():
+    """Generate sales performance report"""
+    print("\n***** Sales Performance Report *****\n")
+    
+    # Calculate total sales
+    total_sales = 0
+    total_orders = len(order_history)
+    
+    # Calculate sales by item
+    item_sales = {}
+    for order in order_history.values():
+        for sku, item in order['items'].items():
+            if sku not in item_sales:
+                item_sales[sku] = {'quantity': 0, 'revenue': 0}
+            item_sales[sku]['quantity'] += item['quantity']
+            item_sales[sku]['revenue'] += item['price'] * item['quantity']
+        total_sales += order['total']
+    
+    # Calculate average order value
+    avg_order_value = total_sales / total_orders if total_orders > 0 else 0
+    
+    # Display report
+    print(f"Total Sales: ${total_sales:.2f}")
+    print(f"Total Orders: {total_orders}")
+    print(f"Average Order Value: ${avg_order_value:.2f}\n")
+    
+    print("Top Selling Items:")
+    sorted_items = sorted(item_sales.items(), key=lambda x: x[1]['revenue'], reverse=True)
+    for sku, sales in sorted_items[:5]:
+        item = inventory[sku]
+        print(f"{item['Name']}: {sales['quantity']} units sold - ${sales['revenue']:.2f}")
+    
+    # Generate report file
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    filename = f"sales_report_{timestamp}.txt"
+    
+    with open(filename, 'w') as f:
+        f.write(f"Sales Performance Report - {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
+        f.write("="*50 + "\n\n")
+        f.write(f"Total Sales: ${total_sales:.2f}\n")
+        f.write(f"Total Orders: {total_orders}\n")
+        f.write(f"Average Order Value: ${avg_order_value:.2f}\n\n")
+        f.write("Top Selling Items:\n")
+        for sku, sales in sorted_items[:5]:
+            item = inventory[sku]
+            f.write(f"{item['Name']}: {sales['quantity']} units sold - ${sales['revenue']:.2f}\n")
+    
+    print(f"\nReport saved as: {filename}")
+def generate_inventory_report():
+    """Generate inventory status report"""
+    print("\n***** Inventory Status Report *****\n")
+    
+    # Calculate inventory metrics
+    total_items = len(inventory)
+    low_stock_items = sum(1 for item in inventory.values() if item['Stock'] <= LOW_STOCK_THRESHOLD)
+    out_of_stock_items = sum(1 for item in inventory.values() if item['Stock'] == 0)
+    total_value = sum(item['Price'] * item['Stock'] for item in inventory.values())
+    
+    # Display report
+    print(f"Total Items: {total_items}")
+    print(f"Low Stock Items: {low_stock_items}")
+    print(f"Out of Stock Items: {out_of_stock_items}")
+    print(f"Total Inventory Value: ${total_value:.2f}\n")
+    
+    print("Inventory Status:")
+    print("SKU\tItem\t\tStock\tStatus")
+    print("-"*60)
+    for sku, item in inventory.items():
+        if item['Stock'] == 0:
+            status = "OUT OF STOCK"
+        elif item['Stock'] <= LOW_STOCK_THRESHOLD:
+            status = "LOW STOCK"
+        else:
+            status = "IN STOCK"
+        print(f"{sku}\t{item['Name']}\t{item['Stock']}\t{status}")
+    
+    # Generate report file
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    filename = f"inventory_report_{timestamp}.txt"
+    
+    with open(filename, 'w') as f:
+        f.write(f"Inventory Status Report - {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
+        f.write("="*50 + "\n\n")
+        f.write(f"Total Items: {total_items}\n")
+        f.write(f"Low Stock Items: {low_stock_items}\n")
+        f.write(f"Out of Stock Items: {out_of_stock_items}\n")
+        f.write(f"Total Inventory Value: ${total_value:.2f}\n\n")
+        f.write("Inventory Status:\n")
+        for sku, item in inventory.items():
+            if item['Stock'] == 0:
+                status = "OUT OF STOCK"
+            elif item['Stock'] <= LOW_STOCK_THRESHOLD:
+                status = "LOW STOCK"
+            else:
+                status = "IN STOCK"
+            f.write(f"{sku}\t{item['Name']}\t{item['Stock']}\t{status}\n")
+    
+    print(f"\nReport saved as: {filename}")
+def generate_inventory_report():
+    """Generate inventory status report"""
+    print("\n***** Inventory Status Report *****\n")
+    
+    # Calculate inventory metrics
+    total_items = len(inventory)
+    low_stock_items = sum(1 for item in inventory.values() if item['Stock'] <= LOW_STOCK_THRESHOLD)
+    out_of_stock_items = sum(1 for item in inventory.values() if item['Stock'] == 0)
+    total_value = sum(item['Price'] * item['Stock'] for item in inventory.values())
+    
+    # Display report
+    print(f"Total Items: {total_items}")
+    print(f"Low Stock Items: {low_stock_items}")
+    print(f"Out of Stock Items: {out_of_stock_items}")
+    print(f"Total Inventory Value: ${total_value:.2f}\n")
+    
+    print("Inventory Status:")
+    print("SKU\tItem\t\tStock\tStatus")
+    print("-"*60)
+    for sku, item in inventory.items():
+        if item['Stock'] == 0:
+            status = "OUT OF STOCK"
+        elif item['Stock'] <= LOW_STOCK_THRESHOLD:
+            status = "LOW STOCK"
+        else:
+            status = "IN STOCK"
+        print(f"{sku}\t{item['Name']}\t{item['Stock']}\t{status}")
+    
+    # Generate report file
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    filename = f"inventory_report_{timestamp}.txt"
+    
+    with open(filename, 'w') as f:
+        f.write(f"Inventory Status Report - {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
+        f.write("="*50 + "\n\n")
+        f.write(f"Total Items: {total_items}\n")
+        f.write(f"Low Stock Items: {low_stock_items}\n")
+        f.write(f"Out of Stock Items: {out_of_stock_items}\n")
+        f.write(f"Total Inventory Value: ${total_value:.2f}\n\n")
+        f.write("Inventory Status:\n")
+        for sku, item in inventory.items():
+            if item['Stock'] == 0:
+                status = "OUT OF STOCK"
+            elif item['Stock'] <= LOW_STOCK_THRESHOLD:
+                status = "LOW STOCK"
+            else:
+                status = "IN STOCK"
+            f.write(f"{sku}\t{item['Name']}\t{item['Stock']}\t{status}\n")
+    
+    print(f"\nReport saved as: {filename}")
+def generate_supplier_performance_report():
+    """Generate supplier performance report"""
+    print("\n***** Supplier Performance Report *****\n")
+    
+    if not supplier_performance:
+        print("No supplier performance data available.")
+        return
+    
+    # Calculate metrics for each supplier
+    for supplier_id, metrics in supplier_performance.items():
+        supplier_name = suppliers[supplier_id]['name']
+        total_orders = metrics['total_orders']
+        on_time_rate = (metrics['on_time_deliveries'] / total_orders * 100) if total_orders > 0 else 0
+        avg_delivery_time = metrics['average_delivery_time']
+        
+        print(f"\nSupplier: {supplier_name}")
+        print(f"Total Orders: {total_orders}")
+        print(f"On-time Delivery Rate: {on_time_rate:.1f}%")
+        print(f"Average Delivery Time: {avg_delivery_time:.1f} days")
+        print(f"Quality Issues: {metrics['quality_issues']}")
+        print(f"Current Rating: {metrics['rating']:.2f}/5.0")
+        
+        # Generate report file
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        filename = f"supplier_report_{supplier_id}_{timestamp}.txt"
+        
+        with open(filename, 'w') as f:
+            f.write(f"Supplier Performance Report - {supplier_name}\n")
+            f.write("="*50 + "\n\n")
+            f.write(f"Total Orders: {total_orders}\n")
+            f.write(f"On-time Delivery Rate: {on_time_rate:.1f}%\n")
+            f.write(f"Average Delivery Time: {avg_delivery_time:.1f} days\n")
+            f.write(f"Quality Issues: {metrics['quality_issues']}\n")
+            f.write(f"Current Rating: {metrics['rating']:.2f}/5.0\n")
+        
+        print(f"Report saved as: {filename}")
+def generate_user_activity_report():
+    """Generate user activity report"""
+    print("\n***** User Activity<codegeex-cursor></codegeex-cursor>
+def generate_user_activity_report():
+    """Generate user activity report"""
+    print("\n***** User Activity<codegeex-cursor></codegeex-cursor>
    item = MENU[sku]['Name']
         price = MENU[sku]['Price']
         stock = inventory[sku]['Stock']
