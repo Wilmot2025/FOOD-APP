@@ -2772,6 +2772,85 @@ elif response == "6":
     elif response == "22":
         print ("Goodbye!")
         ordering = False
+elif response == "6":
+        print("\nWould you like to:")
+        print("1. View order history")
+        print("2. Request a refund")
+        print("3. View inventory")
+        print("4. Restock item")
+        print("5. Check out-of-stock items")
+        print("6. Create supplier order")
+        print("7. Update supplier order status")
+        print("8. View supplier orders")
+        print("9. Generate supplier invoice")
+        print("10. Process supplier payment")
+        print("11. View supplier payment history")
+        print("12. Check items needing restock")
+        print("13. Schedule automated restock checks")
+        print("14. View supplier performance")
+        print("15. Record quality issue")
+        print("16. Calculate optimal inventory levels")
+        print("17. Generate restock recommendations")
+        print("18. Register for loyalty program")
+        print("19. View loyalty benefits")
+        print("20. Issue gift card")
+        print("21. Check gift card balance")
+        choice = input("Enter your choice (1-21): ")
+        
+        if choice == "1":
+            view_order_history()
+        elif choice == "2":
+            order_id = input("Enter order ID for refund: ")
+            process_refund(order_id)
+        elif choice == "3":
+            view_inventory()
+        elif choice == "4":
+            sku = input("Enter item SKU to restock: ")
+            try:
+                quantity = int(input("Enter quantity to add: "))
+                restock_item(sku, quantity)
+            except ValueError:
+                print("Error: Invalid quantity entered.")
+        elif choice == "5":
+            check_out_of_stock_items()
+        elif choice == "6":
+            create_supplier_order()
+        elif choice == "7":
+            update_supplier_order_status()
+        elif choice == "8":
+            view_supplier_orders()
+        elif choice == "9":
+            generate_supplier_invoice()
+        elif choice == "10":
+            process_supplier_payment()
+        elif choice == "11":
+            view_supplier_payments()
+        elif choice == "12":
+            check_restock_needed()
+        elif choice == "13":
+            schedule_restock_check()
+        elif choice == "14":
+            view_supplier_performance()
+        elif choice == "15":
+            order_id = input("Enter order ID: ")
+            issue_description = input("Describe the quality issue: ")
+            record_quality_issue(order_id, issue_description)
+        elif choice == "16":
+            calculate_optimal_inventory()
+        elif choice == "17":
+            generate_restock_recommendations()
+        elif choice == "18":
+            register_loyalty_member()
+        elif choice == "19":
+            view_loyalty_benefits()
+        elif choice == "20":
+            issue_gift_card()
+        elif choice == "21":
+            card_number = input("Enter gift card number: ").upper()
+            check_gift_card_balance(card_number)
+    elif response == "22":
+        print ("Goodbye!")
+        ordering = False
    item = MENU[sku]['Name']
         price = MENU[sku]['Price']
         stock = inventory[sku]['Stock']
