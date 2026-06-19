@@ -3563,6 +3563,354 @@ def order_loop():
         
         if response != "15" and response != "8":
             input("\nPress Enter to continue...")
+def log_user_activity(user, action, details=None, ip_address="127.0.0.1"):
+    """Log user activity with timestamp and details"""
+    import uuid
+    
+    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    session_id = f"SES{next_session_id:08d}"
+    next_session_id += 1
+    
+    # Create session if not exists
+    if session_id not in active_sessions:
+        active_sessions[session_id] = {
+            'user': user['username'],
+            'start_time': timestamp,
+            'last_activity': timestamp,
+            'ip_address': ip_address
+        }
+    
+    # Update last activity
+    active_sessions[session_id]['last_activity'] = timestamp
+    
+    # Log activity
+    activity_log[timestamp] = {
+        'user': user['username'],
+        'role': user['role'],
+        'action': action,
+        'details': details or {},
+        'ip_address': ip_address,
+        'session_id': session_id
+    }
+    
+    # Write to activity file
+    with open('activity_log.txt', 'a') as f:
+        f.write(f"{timestamp} - {user['username']} ({user['role']}) - {action}\n")
+        if details:
+            f.write(f"Details: {details}\n")
+        f.write(f"IP: {ip_address}\n")
+        f.write(f"Session: {session_id}\n")
+        f.write("-" * 50 + "\n")
+def view_activity_log():
+    """Display user activity logs"""
+    print("\n***** Activity Log *****\n")
+    
+    if not activity_log:
+        print("No activity logs available.")
+        return
+    
+    # Sort activities by timestamp (most recent first)
+    sorted_activities = sorted(activity_log.items(), key=lambda x: x[0], reverse=True)
+    
+    print("Timestamp\t\tUser\t\tRole\t\tAction")
+    print("-" * 80)
+    
+    for timestamp, activity in sorted_activities[:20]:  # Show last 20 activities
+        print(f"{timestamp}\t{activity['user']}\t{activity['role']}\t{activity['action']}")
+    
+    print("\nWould you like to view detailed activity? (yes/no)")
+    choice = input().lower()
+    
+    if choice == 'yes':
+        timestamp = input("Enter timestamp to view details: ")
+        if timestamp in activity_log:
+            activity = activity_log[timestamp]
+            print(f"\nActivity Details:")
+            print(f"Timestamp: {timestamp}")
+            print(f"User: {activity['user']} ({activity['role']})")
+            print(f"Action: {activity['action']}")
+            print(f"IP Address: {activity['ip_address']}")
+            print(f"Session ID: {activity['session_id']}")
+            print("\nDetails:")
+            for key, value in activity['details'].items():
+                print(f"{key}: {value}")
+        else:
+            print("Activity not found.")
+def view_activity_log():
+    """Display user activity logs"""
+    print("\n***** Activity Log *****\n")
+    
+    if not activity_log:
+        print("No activity logs available.")
+        return
+    
+    # Sort activities by timestamp (most recent first)
+    sorted_activities = sorted(activity_log.items(), key=lambda x: x[0], reverse=True)
+    
+    print("Timestamp\t\tUser\t\tRole\t\tAction")
+    print("-" * 80)
+    
+    for timestamp, activity in sorted_activities[:20]:  # Show last 20 activities
+        print(f"{timestamp}\t{activity['user']}\t{activity['role']}\t{activity['action']}")
+    
+    print("\nWould you like to view detailed activity? (yes/no)")
+    choice = input().lower()
+    
+    if choice == 'yes':
+        timestamp = input("Enter timestamp to view details: ")
+        if timestamp in activity_log:
+            activity = activity_log[timestamp]
+            print(f"\nActivity Details:")
+            print(f"Timestamp: {timestamp}")
+            print(f"User: {activity['user']} ({activity['role']})")
+            print(f"Action: {activity['action']}")
+            print(f"IP Address: {activity['ip_address']}")
+            print(f"Session ID: {activity['session_id']}")
+            print("\nDetails:")
+            for key, value in activity['details'].items():
+                print(f"{key}: {value}")
+        else:
+            print("Activity not found.")
+def login():
+    """Handle user login with authentication"""
+    print("\n***** Login *****\n")
+    
+    username = input("Enter username: ")
+    password = input("Enter password: ")
+    
+    if username not in users:
+        print("Invalid username or password.")
+        return None
+    
+    user = users[username]
+    
+    if user['locked']:
+        print("Account locked. Please contact administrator.")
+        return None
+    
+    if user['password'] == password:
+        user['login_attempts'] = 0
+        print(f"\nWelcome back, {user['full_name']}!")
+        print(f"Role: {user['role'].title()}")
+        
+        # Log successful login
+        log_user_activity(user, 'Successful Login', {
+            'login_attempts': user['login_attempts']
+        })
+        
+        return user
+    else:
+        user['login_attempts'] += 1
+        remaining_attempts = 3 - user['login_attempts']
+        
+        # Log failed login attempt
+        log_user_activity(user, 'Failed Login', {
+            'attempt_number': user['login_attempts'],
+            'remaining_attempts': remaining_attempts
+        })
+        
+        if remaining_attempts > 0:
+            print(f"Invalid password. {remaining_attempts} attempts remaining.")
+        else:
+            user['locked'] = True
+            print("Account locked due to too many failed attempts.")
+            print("Please contact administrator.")
+            
+            # Log account lock
+            log_user_activity(user, 'Account Locked', {
+                'failed_attempts': user['login_attempts']
+            })
+    
+    return None
+def login():
+    """Handle user login with authentication"""
+    print("\n***** Login *****\n")
+    
+    username = input("Enter username: ")
+    password = input("Enter password: ")
+    
+    if username not in users:
+        print("Invalid username or password.")
+        return None
+    
+    user = users[username]
+    
+    if user['locked']:
+        print("Account locked. Please contact administrator.")
+        return None
+    
+    if user['password'] == password:
+        user['login_attempts'] = 0
+        print(f"\nWelcome back, {user['full_name']}!")
+        print(f"Role: {user['role'].title()}")
+        
+        # Log successful login
+        log_user_activity(user, 'Successful Login', {
+            'login_attempts': user['login_attempts']
+        })
+        
+        return user
+    else:
+        user['login_attempts'] += 1
+        remaining_attempts = 3 - user['login_attempts']
+        
+        # Log failed login attempt
+        log_user_activity(user, 'Failed Login', {
+            'attempt_number': user['login_attempts'],
+            'remaining_attempts': remaining_attempts
+        })
+        
+        if remaining_attempts > 0:
+            print(f"Invalid password. {remaining_attempts} attempts remaining.")
+        else:
+            user['locked'] = True
+            print("Account locked due to too many failed attempts.")
+            print("Please contact administrator.")
+            
+            # Log account lock
+            log_user_activity(user, 'Account Locked', {
+                'failed_attempts': user['login_attempts']
+            })
+    
+    return None
+if current_user['role'] == 'manager':
+        print("1. View order history")
+        print("2. View inventory")
+        print("3. Restock item")
+        print("4. Check items needing restock")
+        print("5. Create supplier order")
+        print("6. Update supplier order status")
+        print("7. View supplier orders")
+        print("8. Generate supplier invoice")
+        print("9. Process supplier payment")
+        print("10. View supplier payment history")
+        print("11. View supplier performance")
+        print("12. Calculate optimal inventory levels")
+        print("13. Generate restock recommendations")
+        print("14. Modify user access")
+        print("15. View activity log")
+        print("16. Monitor active sessions")
+        print("17. Logout")
+    else:  # sales role
+        print("1. View order history")
+        print("2. View inventory")
+        print("3. Restock item")
+        print("4. Check items needing restock")
+        print("5. Create supplier order")
+        print("6. View supplier orders")
+        print("7. Generate restock recommendations")
+        print("8. View activity log")
+        print("9. Logout")
+if current_user['role'] == 'manager':
+        print("1. View order history")
+        print("2. View inventory")
+        print("3. Restock item")
+        print("4. Check items needing restock")
+        print("5. Create supplier order")
+        print("6. Update supplier order status")
+        print("7. View supplier orders")
+        print("8. Generate supplier invoice")
+        print("9. Process supplier payment")
+        print("10. View supplier payment history")
+        print("11. View supplier performance")
+        print("12. Calculate optimal inventory levels")
+        print("13. Generate restock recommendations")
+        print("14. Modify user access")
+        print("15. View activity log")
+        print("16. Monitor active sessions")
+        print("17. Logout")
+    else:  # sales role
+        print("1. View order history")
+        print("2. View inventory")
+        print("3. Restock item")
+        print("4. Check items needing restock")
+        print("5. Create supplier order")
+        print("6. View supplier orders")
+        print("7. Generate restock recommendations")
+        print("8. View activity log")
+        print("9. Logout")
+def modify_user_access():
+    """Modify user access rights (manager only)"""
+    print("\n***** Modify User Access *****\n")
+    
+    # List all users
+    print("Current users:")
+    for username, user in users.items():
+        status = "Locked" if user['locked'] else "Active"
+        print(f"{username} ({user['full_name']}) - {user['role'].title()} - {status}")
+    
+    username = input("\nEnter username to modify: ")
+    
+    if username not in users:
+        print("User not found.")
+        return
+    
+    user = users[username]
+    print(f"\nCurrent access for {user['full_name']}:")
+    print(f"Role: {user['role']}")
+    print(f"Status: {'Locked' if user['locked'] else 'Active'}")
+    
+    if user['role'] == 'manager':
+        print("\nCannot modify manager access.")
+        return
+    
+    print("\nSelect modification:")
+    print("1. Change role")
+    print("2. Lock/Unlock account")
+    print("3. Reset password")
+    choice = input("Enter your choice (1-3): ")
+    
+    old_role = user['role']
+    old_status = user['locked']
+    
+    if choice == "1":
+        new_role = input("Enter new role (manager/sales): ").lower()
+        if new_role in ['manager', 'sales']:
+            user['role'] = new_role
+            print(f"Role updated to {new_role}.")
+            # Log role change
+            log_user_activity(current_user, 'Role Change', {
+                'target_user': username,
+                'old_role': old_role,
+                'new_role': new_role
+            })
+        else:
+            print("Invalid role.")
+    
+    elif choice == "2":
+        if user['locked']:
+            user['locked'] = False
+            print("Account unlocked.")
+            # Log account unlock
+            log_user_activity(current_user, 'Account Unlock', {
+                'target_user': username
+            })
+        else:
+            user['locked'] = True
+            print("Account locked.")
+            # Log account lock
+            log_user_activity(current_user, 'Account Lock', {
+                'target_user': username
+            })
+    
+    elif choice == "3":
+        new_password = input("Enter new password: ")
+        confirm_password = input("Confirm new password: ")
+        
+        if new_password == confirm_password:
+            user['password'] = new_password
+            user['login_attempts'] = 0
+            user['locked'] = False
+            print("Password reset successfully.")
+            # Log password reset
+            log_user_activity(current_user, 'Password Reset', {
+                'target_user': username
+            })
+        else:
+            print("Passwords do not match.")
+    
+    else:
+        print("Invalid choice.")
    item = MENU[sku]['Name']
         price = MENU[sku]['Price']
         stock = inventory[sku]['Stock']
