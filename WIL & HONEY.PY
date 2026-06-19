@@ -2862,7 +2862,840 @@ users = {
     # }}
 }
 
-# Default credentials
+# Defimport unittest
+import os
+import tempfile
+from datetime import datetime, timedelta
+
+class TestWILAndHONEY(unittest.TestCase):
+    """Test suite for WIL & HONEY system"""
+    
+    def setUp(self):
+        """Set up test environment"""
+        # Create temporary files for testing
+        self.temp_dir = tempfile.mkdtemp()
+        self.activity_log_file = os.path.join(self.temp_dir, 'test_activity_log.txt')
+        
+        # Reset system state
+        cart.clear()
+        order_history.clear()
+        inventory = {
+            "1": {"Name": "Sandwish", "Price": 5.00, "Stock": 20},
+            "2": {"Name": "Hawaii Pizza", "Price": 10.00, "Stock": 15},
+            "3": {"Name": "Corn Pizza", "Price": 7.00, "Stock": 15},
+            "4": {"Name": "Pepperoni Pizza", "Price": 6.00, "Stock": 15},
+            "5": {"Name": "Vegetable Pizza", "Price": 9.00, "Stock": 15},
+            "6": {"Name": "Cheese Pizza", "Price": 7.50, "Stock": 15},
+            "7": {"Name": "Jollof Rice", "Price": 5.50, "Stock": 20},
+            "8": {"Name": "Dry Rice", "Price": 10.00, "Stock": 20},
+            "9": {"Name": "Ice Cream", "Price": 3.00, "Stock": 25},
+            "10": {"Name": "French Fry", "Price": 2.50, "Stock": 30}
+        }
+        
+        # Create test users
+        users['test_manager'] = {
+            'password': 'test123',
+            'role': 'manager',
+            'full_name': 'Test Manager',
+            'login_attempts': 0,
+            'locked': False
+        }
+        
+        users['test_sales'] = {
+            'password': 'test123',
+            'role': 'sales',
+            'full_name': 'Test Sales',
+            'login_attempts': 0,
+            'locked': False
+        }
+    
+    def tearDown(self):
+        """Clean up test environment"""
+        # Remove temporary files
+        if os.path.exists(self.activity_log_file):
+            os.remove(self.activity_log_file)
+        os.rmdir(self.temp_dir)
+        
+        # Reset system state
+        cart.clear()
+        order_history.clear()
+        if 'test_manager' in users:
+            del users['test_manager']
+        if 'test_sales' in users:
+            del users['test_sales']
+    
+    def test_login(self):
+        """Test user authentication"""
+        # Test successful login
+        user = login_user('test_manager', 'test123')
+        self.assertIsNotNone(user)
+        self.assertEqual(user['role'], 'manager')
+        
+        # Test failed login
+        user = login_user('test_manager', 'wrongpass')
+        self.assertIsNone(user)
+        
+        # Test account lock after failed attempts
+        for _ in range(3):
+            login_user('test_sales', 'wrongpass')
+        user = users['test_sales']
+        self.assertTrue(user['locked'])
+    
+    def test_cart_operations(self):
+        """Test cart operations"""
+        # Test adding items to cart
+        result = add_to_cart("1", 2)
+        self.assertTrue(result)
+        self.assertEqual(cart["1"]["quantity"], 2)
+        
+        # Test updating cart quantity
+        result = add_to_cart("1", 1)
+        self.assertTrue(result)
+        self.assertEqual(cart["1"]["quantity"], 3)
+        
+        # Test removing items from cart
+        result = remove_from_cart("1")
+        self.assertTrue(result)
+        self.assertNotIn("1", cart)
+        
+        # Test adding more stock than available
+        result = add_to_cart("1", 100)
+        self.assertFalse(result)
+    
+    def test_inventory_management(self):
+        """Test inventory management"""
+        # Test restocking items
+        result = restock_item("1", 10)
+        self.assertTrue(result)
+        self.assertEqual(inventory["1"]["Stock"], 30)
+        
+        # Test checking low stock
+        self.assertTrue(check_low_stock("1"))
+        
+        # Test checking out of stock
+        inventory["1"]["Stock"] = 0
+        self.assertTrue(check_out_of_stock("1"))
+    
+    def test_supplier_orders(self):
+        """Test supplier order management"""
+        # Test creating supplier order
+        order_id = create_supplier_order("FRESH_FOODS", {"1": 5})
+        self.assertIsNotNone(order_id)
+        self.assertIn(order_id, supplier_orders)
+        
+        # Test updating order status
+        result = update_supplier_order_status(order_id, "delivered")
+        self.assertTrue(result)
+        self.assertEqual(supplier_orders[order_id]["status"], "delivered")
+        
+        # Test generating invoice
+        invoice_id = generate_supplier_invoice(order_id)
+        self.assertIsNotNone(invoice_id)
+        self.assertIn(invoice_id, supplier_invoices)
+    
+    def test_loyalty_program(self):
+        """Test loyalty program functionality"""
+        # Test registering new member
+        customer_id = register_loyalty_member("John Doe", "john@example.com")
+        self.assertIsNotNone(customer_id)
+        self.assertIn(customer_id, loyalty_members)
+        
+        # Test updating loyalty points
+        result = update_loyalty_points(customer_id, 100)
+        self.assertTrue(result)
+        self.assertEqual(loyalty_members[customer_id]["points"], 1000)
+        
+        # Test applying discount
+        total = apply_loyalty_discount(customer_id, 100)
+        self.assertEqual(total, 95)  # 5% discount for silver tier
+    
+    def test_gift_cards(self):
+        """Test gift card functionality"""
+        # Test issuing gift card
+        card_number = issue_gift_card(50)
+        self.assertIsNotNone(card_number)
+        self.assertIn(card_number, gift_cards)
+        self.assertEqual(gift_cards[card_number]["balance"], 50)
+        
+        # Test checking balance
+        balance = check_gift_card_balance(card_number)
+        self.assertEqual(balance, 50)
+        
+        # Test applying gift card
+        result = apply_gift_card(card_number, 30)
+        self.assertEqual(result, 30)
+        self.assertEqual(gift_cards[card_number]["balance"], 20)
+    
+    def test_activity_tracking(self):
+        """Test activity tracking"""
+        # Test logging user activity
+        user = users['test_manager']
+        log_user_activity(user, "Test Action", {"test": "data"})
+        
+        # Verify activity was logged
+        self.assertTrue(len(activity_log) > 0)
+        
+        # Test viewing activity log
+        activities = view_activity_log()
+        self.assertTrue(len(activities) > 0)
+
+def run_tests():
+    """Run all tests"""
+    print("\n***** Running Test Suite *****\n")
+    
+    # Create test suite
+    suite = unittest.TestLoader().loadTestsFromTestCase(TestWILAndHONEY)
+    
+    # Run tests
+    runner = unittest.TextTestRunner(verbosity=2)
+    result = runner.run(suite)
+    
+    # Print test results
+    print("\n***** Test Results *****")
+    print(f"Tests run: {result.testsRun}")
+    print(f"Failures: {len(result.failures)}")
+    print(f"Errors: {len(result.errors)}")
+    
+    if result.failures:
+        print("\nFailures:")
+        for test, traceback in result.failures:
+            print(f"- {test}: {traceback}")
+    
+    if result.errors:
+        print("\nErrors:")
+        for test, traceback in result.errors:
+            print(f"- {test}: {traceback}")
+    
+    return result.wasSuccessful()
+
+if __name__ == '__main__':
+    # Run tests if script is executed directly
+    success = run_tests()
+    if success:
+        print("\nAll tests passed!")
+    else:
+        print("\nSome tests failed!")
+def login_user(username, password):
+    """Helper function for testing login"""
+    if username not in users:
+        return None
+    
+    user = users[username]
+    if user['locked']:
+        return None
+    
+    if user['password'] == password:
+        user['login_attempts'] = 0
+        return user
+    
+    user['login_attempts'] += 1
+    return None
+
+def check_low_stock(sku):
+    """Helper function for testing low stock check"""
+    return inventory[sku]['Stock'] <= LOW_STOCK_THRESHOLD
+
+def check_out_of_stock(sku):
+    """Helper function for testing out of stock check"""
+    return inventory[sku]['Stock'] == 0
+
+def create_supplier_order(supplier_id, items):
+    """Helper function for testing supplier order creation"""
+    global next_supplier_order_id
+    
+    order_id = f"SO{next_supplier_order_id:04d}"
+    supplier_orders[order_id] = {
+        'supplier': supplier_id,
+        'items': items,
+        'status': 'pending',
+        'date': datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        'expected_delivery': (datetime.now() + timedelta(days=2)).strftime("%Y-%m-%d")
+    }
+    
+    next_supplier_order_id += 1
+    return order_id
+
+def generate_supplier_invoice(order_id):
+    """Helper function for testing invoice generation"""
+    if order_id not in supplier_orders:
+        return None
+    
+    order = supplier_orders[order_id]
+    invoice_id = f"INV{next_invoice_id:04d}"
+    
+    total = 0
+    for sku, quantity in order['items'].items():
+        total += inventory[sku]['Price'] * quantity
+    
+    supplier_invoices[invoice_id] = {
+        'order_id': order_id,
+        'amount': total,
+        'due_date': (datetime.now() + timedelta(days=30)).strftime("%Y-%m-%d"),
+        'status': 'pending'
+    }
+    
+    next_invoice_id += 1
+    return invoice_id
+
+def register_loyalty_member(name, email):
+    """Helper function for testing loyalty registration"""
+    global next_customer_id
+    
+    customer_id = f"CUST{next_customer_id:04d}"
+    loyalty_members[customer_id] = {
+        'name': name,
+        'email': email,
+        'phone': '',
+        'points': 0,
+        'tier': 'Bronze',
+        'join_date': datetime.now().strftime("%Y-%m-%d"),
+        'total_spent': 0.0,
+        'visit_count': 0
+    }
+    
+    next_customer_id += 1
+    return customer_id
+
+def issue_gift_card(amount):
+    """Helper function for testing gift card issuance"""
+    global next_card_number
+    
+    card_number = f"GIFT{next_card_number:08d}"
+    next_card_number += 1
+    
+    gift_cards[card_number] = {
+        'balance': amount,
+        'is_active': True,
+        'issue_date': datetime.now().strftime("%Y-%m-%d"),
+        'expiry_date': (datetime.now() + timedelta(days=365)).strftime("%Y-%m-%d"),
+        'customer_id': None
+    }
+    
+    return card_number
+
+def view_activity_log():
+    """Helper function for testing activity log viewing"""
+    return activity_log
+def login_user(username, password):
+    """Helper function for testing login"""
+    if username not in users:
+        return None
+    
+    user = users[username]
+    if user['locked']:
+        return None
+    
+    if user['password'] == password:
+        user['login_attempts'] = 0
+        return user
+    
+    user['login_attempts'] += 1
+    return None
+
+def check_low_stock(sku):
+    """Helper function for testing low stock check"""
+    return inventory[sku]['Stock'] <= LOW_STOCK_THRESHOLD
+
+def check_out_of_stock(sku):
+    """Helper function for testing out of stock check"""
+    return inventory[sku]['Stock'] == 0
+
+def create_supplier_order(supplier_id, items):
+    """Helper function for testing supplier order creation"""
+    global next_supplier_order_id
+    
+    order_id = f"SO{next_supplier_order_id:04d}"
+    supplier_orders[order_id] = {
+        'supplier': supplier_id,
+        'items': items,
+        'status': 'pending',
+        'date': datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        'expected_delivery': (datetime.now() + timedelta(days=2)).strftime("%Y-%m-%d")
+    }
+    
+    next_supplier_order_id += 1
+    return order_id
+
+def generate_supplier_invoice(order_id):
+    """Helper function for testing invoice generation"""
+    if order_id not in supplier_orders:
+        return None
+    
+    order = supplier_orders[order_id]
+    invoice_id = f"INV{next_invoice_id:04d}"
+    
+    total = 0
+    for sku, quantity in order['items'].items():
+        total += inventory[sku]['Price'] * quantity
+    
+    supplier_invoices[invoice_id] = {
+        'order_id': order_id,
+        'amount': total,
+        'due_date': (datetime.now() + timedelta(days=30)).strftime("%Y-%m-%d"),
+        'status': 'pending'
+    }
+    
+    next_invoice_id += 1
+    return invoice_id
+
+def register_loyalty_member(name, email):
+    """Helper function for testing loyalty registration"""
+    global next_customer_id
+    
+    customer_id = f"CUST{next_customer_id:04d}"
+    loyalty_members[customer_id] = {
+        'name': name,
+        'email': email,
+        'phone': '',
+        'points': 0,
+        'tier': 'Bronze',
+        'join_date': datetime.now().strftime("%Y-%m-%d"),
+        'total_spent': 0.0,
+        'visit_count': 0
+    }
+    
+    next_customer_id += 1
+    return customer_id
+
+def issue_gift_card(amount):
+    """Helper function for testing gift card issuance"""
+    global next_card_number
+    
+    card_number = f"GIFT{next_card_number:08d}"
+    next_card_number += 1
+    
+    gift_cards[card_number] = {
+        'balance': amount,
+        'is_active': True,
+        'issue_date': datetime.now().strftime("%Y-%m-%d"),
+        'expiry_date': (datetime.now() + timedelta(days=365)).strftime("%Y-%m-%d"),
+        'customer_id': None
+    }
+    
+    return card_number
+
+def view_activity_log():
+    """Helper function for testing activity log viewing"""
+    return activity_log
+def login_user(username, password):
+    """Helper function for testing login"""
+    if username not in users:
+        return None
+    
+    user = users[username]
+    if user['locked']:
+        return None
+    
+    if user['password'] == password:
+        user['login_attempts'] = 0
+        return user
+    
+    user['login_attempts'] += 1
+    return None
+
+def check_low_stock(sku):
+    """Helper function for testing low stock check"""
+    return inventory[sku]['Stock'] <= LOW_STOCK_THRESHOLD
+
+def check_out_of_stock(sku):
+    """Helper function for testing out of stock check"""
+    return inventory[sku]['Stock'] == 0
+
+def create_supplier_order(supplier_id, items):
+    """Helper function for testing supplier order creation"""
+    global next_supplier_order_id
+    
+    order_id = f"SO{next_supplier_order_id:04d}"
+    supplier_orders[order_id] = {
+        'supplier': supplier_id,
+        'items': items,
+        'status': 'pending',
+        'date': datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        'expected_delivery': (datetime.now() + timedelta(days=2)).strftime("%Y-%m-%d")
+    }
+    
+    next_supplier_order_id += 1
+    return order_id
+
+def generate_supplier_invoice(order_id):
+    """Helper function for testing invoice generation"""
+    if order_id not in supplier_orders:
+        return None
+    
+    order = supplier_orders[order_id]
+    invoice_id = f"INV{next_invoice_id:04d}"
+    
+    total = 0
+    for sku, quantity in order['items'].items():
+        total += inventory[sku]['Price'] * quantity
+    
+    supplier_invoices[invoice_id] = {
+        'order_id': order_id,
+        'amount': total,
+        'due_date': (datetime.now() + timedelta(days=30)).strftime("%Y-%m-%d"),
+        'status': 'pending'
+    }
+    
+    next_invoice_id += 1
+    return invoice_id
+
+def register_loyalty_member(name, email):
+    """Helper function for testing loyalty registration"""
+    global next_customer_id
+    
+    customer_id = f"CUST{next_customer_id:04d}"
+    loyalty_members[customer_id] = {
+        'name': name,
+        'email': email,
+        'phone': '',
+        'points': 0,
+        'tier': 'Bronze',
+        'join_date': datetime.now().strftime("%Y-%m-%d"),
+        'total_spent': 0.0,
+        'visit_count': 0
+    }
+    
+    next_customer_id += 1
+    return customer_id
+
+def issue_gift_card(amount):
+    """Helper function for testing gift card issuance"""
+    global next_card_number
+    
+    card_number = f"GIFT{next_card_number:08d}"
+    next_card_number += 1
+    
+    gift_cards[card_number] = {
+        'balance': amount,
+        'is_active': True,
+        'issue_date': datetime.now().strftime("%Y-%m-%d"),
+        'expiry_date': (datetime.now() + timedelta(days=365)).strftime("%Y-%m-%d"),
+        'customer_id': None
+    }
+    
+    return card_number
+
+def view_activity_log():
+    """Helper function for testing activity log viewing"""
+    return activity_log
+def login_user(username, password):
+    """Helper function for testing login"""
+    if username not in users:
+        return None
+    
+    user = users[username]
+    if user['locked']:
+        return None
+    
+    if user['password'] == password:
+        user['login_attempts'] = 0
+        return user
+    
+    user['login_attempts'] += 1
+    return None
+
+def check_low_stock(sku):
+    """Helper function for testing low stock check"""
+    return inventory[sku]['Stock'] <= LOW_STOCK_THRESHOLD
+
+def check_out_of_stock(sku):
+    """Helper function for testing out of stock check"""
+    return inventory[sku]['Stock'] == 0
+
+def create_supplier_order(supplier_id, items):
+    """Helper function for testing supplier order creation"""
+    global next_supplier_order_id
+    
+    order_id = f"SO{next_supplier_order_id:04d}"
+    supplier_orders[order_id] = {
+        'supplier': supplier_id,
+        'items': items,
+        'status': 'pending',
+        'date': datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        'expected_delivery': (datetime.now() + timedelta(days=2)).strftime("%Y-%m-%d")
+    }
+    
+    next_supplier_order_id += 1
+    return order_id
+
+def generate_supplier_invoice(order_id):
+    """Helper function for testing invoice generation"""
+    if order_id not in supplier_orders:
+        return None
+    
+    order = supplier_orders[order_id]
+    invoice_id = f"INV{next_invoice_id:04d}"
+    
+    total = 0
+    for sku, quantity in order['items'].items():
+        total += inventory[sku]['Price'] * quantity
+    
+    supplier_invoices[invoice_id] = {
+        'order_id': order_id,
+        'amount': total,
+        'due_date': (datetime.now() + timedelta(days=30)).strftime("%Y-%m-%d"),
+        'status': 'pending'
+    }
+    
+    next_invoice_id += 1
+    return invoice_id
+
+def register_loyalty_member(name, email):
+    """Helper function for testing loyalty registration"""
+    global next_customer_id
+    
+    customer_id = f"CUST{next_customer_id:04d}"
+    loyalty_members[customer_id] = {
+        'name': name,
+        'email': email,
+        'phone': '',
+        'points': 0,
+        'tier': 'Bronze',
+        'join_date': datetime.now().strftime("%Y-%m-%d"),
+        'total_spent': 0.0,
+        'visit_count': 0
+    }
+    
+    next_customer_id += 1
+    return customer_id
+
+def issue_gift_card(amount):
+    """Helper function for testing gift card issuance"""
+    global next_card_number
+    
+    card_number = f"GIFT{next_card_number:08d}"
+    next_card_number += 1
+    
+    gift_cards[card_number] = {
+        'balance': amount,
+        'is_active': True,
+        'issue_date': datetime.now().strftime("%Y-%m-%d"),
+        'expiry_date': (datetime.now() + timedelta(days=365)).strftime("%Y-%m-%d"),
+        'customer_id': None
+    }
+    
+    return card_number
+
+def view_activity_log():
+    """Helper function for testing activity log viewing"""
+    return activity_log
+def login_user(username, password):
+    """Helper function for testing login"""
+    if username not in users:
+        return None
+    
+    user = users[username]
+    if user['locked']:
+        return None
+    
+    if user['password'] == password:
+        user['login_attempts'] = 0
+        return user
+    
+    user['login_attempts'] += 1
+    return None
+
+def check_low_stock(sku):
+    """Helper function for testing low stock check"""
+    return inventory[sku]['Stock'] <= LOW_STOCK_THRESHOLD
+
+def check_out_of_stock(sku):
+    """Helper function for testing out of stock check"""
+    return inventory[sku]['Stock'] == 0
+
+def create_supplier_order(supplier_id, items):
+    """Helper function for testing supplier order creation"""
+    global next_supplier_order_id
+    
+    order_id = f"SO{next_supplier_order_id:04d}"
+    supplier_orders[order_id] = {
+        'supplier': supplier_id,
+        'items': items,
+        'status': 'pending',
+        'date': datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        'expected_delivery': (datetime.now() + timedelta(days=2)).strftime("%Y-%m-%d")
+    }
+    
+    next_supplier_order_id += 1
+    return order_id
+
+def generate_supplier_invoice(order_id):
+    """Helper function for testing invoice generation"""
+    if order_id not in supplier_orders:
+        return None
+    
+    order = supplier_orders[order_id]
+    invoice_id = f"INV{next_invoice_id:04d}"
+    
+    total = 0
+    for sku, quantity in order['items'].items():
+        total += inventory[sku]['Price'] * quantity
+    
+    supplier_invoices[invoice_id] = {
+        'order_id': order_id,
+        'amount': total,
+        'due_date': (datetime.now() + timedelta(days=30)).strftime("%Y-%m-%d"),
+        'status': 'pending'
+    }
+    
+    next_invoice_id += 1
+    return invoice_id
+
+def register_loyalty_member(name, email):
+    """Helper function for testing loyalty registration"""
+    global next_customer_id
+    
+    customer_id = f"CUST{next_customer_id:04d}"
+    loyalty_members[customer_id] = {
+        'name': name,
+        'email': email,
+        'phone': '',
+        'points': 0,
+        'tier': 'Bronze',
+        'join_date': datetime.now().strftime("%Y-%m-%d"),
+        'total_spent': 0.0,
+        'visit_count': 0
+    }
+    
+    next_customer_id += 1
+    return customer_id
+
+def issue_gift_card(amount):
+    """Helper function for testing gift card issuance"""
+    global next_card_number
+    
+    card_number = f"GIFT{next_card_number:08d}"
+    next_card_number += 1
+    
+    gift_cards[card_number] = {
+        'balance': amount,
+        'is_active': True,
+        'issue_date': datetime.now().strftime("%Y-%m-%d"),
+        'expiry_date': (datetime.now() + timedelta(days=365)).strftime("%Y-%m-%d"),
+        'customer_id': None
+    }
+    
+    return card_number
+
+def view_activity_log():
+    """Helper function for testing activity log viewing"""
+    return activity_log
+def login_user(username, password):
+    """Helper function for testing login"""
+    if username not in users:
+        return None
+    
+    user = users[username]
+    if user['locked']:
+        return None
+    
+    if user['password'] == password:
+        user['login_attempts'] = 0
+        return user
+    
+    user['login_attempts'] += 1
+    return None
+
+def check_low_stock(sku):
+    """Helper function for testing low stock check"""
+    return inventory[sku]['Stock'] <= LOW_STOCK_THRESHOLD
+
+def check_out_of_stock(sku):
+    """Helper function for testing out of stock check"""
+    return inventory[sku]['Stock'] == 0
+
+def create_supplier_order(supplier_id, items):
+    """Helper function for testing supplier order creation"""
+    global next_supplier_order_id
+    
+    order_id = f"SO{next_supplier_order_id:04d}"
+    supplier_orders[order_id] = {
+        'supplier': supplier_id,
+        'items': items,
+        'status': 'pending',
+        'date': datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        'expected_delivery': (datetime.now() + timedelta(days=2)).strftime("%Y-%m-%d")
+    }
+    
+    next_supplier_order_id += 1
+    return order_id
+
+def generate_supplier_invoice(order_id):
+    """Helper function for testing invoice generation"""
+    if order_id not in supplier_orders:
+        return None
+    
+    order = supplier_orders[order_id]
+    invoice_id = f"INV{next_invoice_id:04d}"
+    
+    total = 0
+    for sku, quantity in order['items'].items():
+        total += inventory[sku]['Price'] * quantity
+    
+    supplier_invoices[invoice_id] = {
+        'order_id': order_id,
+        'amount': total,
+        'due_date': (datetime.now() + timedelta(days=30)).strftime("%Y-%m-%d"),
+        'status': 'pending'
+    }
+    
+    next_invoice_id += 1
+    return invoice_id
+
+def register_loyalty_member(name, email):
+    """Helper function for testing loyalty registration"""
+    global next_customer_id
+    
+    customer_id = f"CUST{next_customer_id:04d}"
+    loyalty_members[customer_id] = {
+        'name': name,
+        'email': email,
+        'phone': '',
+        'points': 0,
+        'tier': 'Bronze',
+        'join_date': datetime.now().strftime("%Y-%m-%d"),
+        'total_spent': 0.0,
+        'visit_count': 0
+    }
+    
+    next_customer_id += 1
+    return customer_id
+
+def issue_gift_card(amount):
+    """Helper function for testing gift card issuance"""
+    global next_card_number
+    
+    card_number = f"GIFT{next_card_number:08d}"
+    next_card_number += 1
+    
+    gift_cards[card_number] = {
+        'balance': amount,
+        'is_active': True,
+        'issue_date': datetime.now().strftime("%Y-%m-%d"),
+        'expiry_date': (datetime.now() + timedelta(days=365)).strftime("%Y-%m-%d"),
+        'customer_id': None
+    }
+    
+    return card_number
+
+def view_activity_log():
+    """Helper function for testing activity log viewing"""
+    return activity_log
+if __name__ == '__main__':
+    # Run tests if script is executed directly
+    success = run_tests()
+    if success:
+        print("\nAll tests passed!")
+    else:
+        print("\nSome tests failed!")
+if __name__ == '__main__':
+    # Run tests if script is executed directly
+    success = run_tests()
+    if success:
+        print("\nAll tests passed!")
+    else:
+        print("\nSome tests failed!")
+ault credentials
 users['manager'] = {
     'password': 'manager123',
     'role': 'manager',
