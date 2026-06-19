@@ -3269,6 +3269,300 @@ elif response == "6":
     elif response == "22":
         print ("Goodbye!")
         ordering = False
+def login():
+    """Handle user login with authentication"""
+    print("\n***** Login *****\n")
+    
+    username = input("Enter username: ")
+    password = input("Enter password: ")
+    
+    if username not in users:
+        print("Invalid username or password.")
+        return None
+    
+    user = users[username]
+    
+    if user['locked']:
+        print("Account locked. Please contact administrator.")
+        return None
+    
+    if user['password'] == password:
+        user['login_attempts'] = 0
+        print(f"\nWelcome back, {user['full_name']}!")
+        print(f"Role: {user['role'].title()}")
+        return user
+    else:
+        user['login_attempts'] += 1
+        remaining_attempts = 3 - user['login_attempts']
+        
+        if remaining_attempts > 0:
+            print(f"Invalid password. {remaining_attempts} attempts remaining.")
+        else:
+            user['locked'] = True
+            print("Account locked due to too many failed attempts.")
+            print("Please contact administrator.")
+    
+    return None
+def login():
+    """Handle user login with authentication"""
+    print("\n***** Login *****\n")
+    
+    username = input("Enter username: ")
+    password = input("Enter password: ")
+    
+    if username not in users:
+        print("Invalid username or password.")
+        return None
+    
+    user = users[username]
+    
+    if user['locked']:
+        print("Account locked. Please contact administrator.")
+        return None
+    
+    if user['password'] == password:
+        user['login_attempts'] = 0
+        print(f"\nWelcome back, {user['full_name']}!")
+        print(f"Role: {user['role'].title()}")
+        return user
+    else:
+        user['login_attempts'] += 1
+        remaining_attempts = 3 - user['login_attempts']
+        
+        if remaining_attempts > 0:
+            print(f"Invalid password. {remaining_attempts} attempts remaining.")
+        else:
+            user['locked'] = True
+            print("Account locked due to too many failed attempts.")
+            print("Please contact administrator.")
+    
+    return None
+def modify_user_access():
+    """Modify user access rights (manager only)"""
+    print("\n***** Modify User Access *****\n")
+    
+    # List all users
+    print("Current users:")
+    for username, user in users.items():
+        status = "Locked" if user['locked'] else "Active"
+        print(f"{username} ({user['full_name']}) - {user['role'].title()} - {status}")
+    
+    username = input("\nEnter username to modify: ")
+    
+    if username not in users:
+        print("User not found.")
+        return
+    
+    user = users[username]
+    print(f"\nCurrent access for {user['full_name']}:")
+    print(f"Role: {user['role']}")
+    print(f"Status: {'Locked' if user['locked'] else 'Active'}")
+    
+    if user['role'] == 'manager':
+        print("\nCannot modify manager access.")
+        return
+    
+    print("\nSelect modification:")
+    print("1. Change role")
+    print("2. Lock/Unlock account")
+    print("3. Reset password")
+    choice = input("Enter your choice (1-3): ")
+    
+    if choice == "1":
+        new_role = input("Enter new role (manager/sales): ").lower()
+        if new_role in ['manager', 'sales']:
+            user['role'] = new_role
+            print(f"Role updated to {new_role}.")
+        else:
+            print("Invalid role.")
+    
+    elif choice == "2":
+        if user['locked']:
+            user['locked'] = False
+            print("Account unlocked.")
+        else:
+            user['locked'] = True
+            print("Account locked.")
+    
+    elif choice == "3":
+        new_password = input("Enter new password: ")
+        confirm_password = input("Confirm new password: ")
+        
+        if new_password == confirm_password:
+            user['password'] = new_password
+            user['login_attempts'] = 0
+            user['locked'] = False
+            print("Password reset successfully.")
+        else:
+            print("Passwords do not match.")
+    
+    else:
+        print("Invalid choice.")
+def modify_user_access():
+    """Modify user access rights (manager only)"""
+    print("\n***** Modify User Access *****\n")
+    
+    # List all users
+    print("Current users:")
+    for username, user in users.items():
+        status = "Locked" if user['locked'] else "Active"
+        print(f"{username} ({user['full_name']}) - {user['role'].title()} - {status}")
+    
+    username = input("\nEnter username to modify: ")
+    
+    if username not in users:
+        print("User not found.")
+        return
+    
+    user = users[username]
+    print(f"\nCurrent access for {user['full_name']}:")
+    print(f"Role: {user['role']}")
+    print(f"Status: {'Locked' if user['locked'] else 'Active'}")
+    
+    if user['role'] == 'manager':
+        print("\nCannot modify manager access.")
+        return
+    
+    print("\nSelect modification:")
+    print("1. Change role")
+    print("2. Lock/Unlock account")
+    print("3. Reset password")
+    choice = input("Enter your choice (1-3): ")
+    
+    if choice == "1":
+        new_role = input("Enter new role (manager/sales): ").lower()
+        if new_role in ['manager', 'sales']:
+            user['role'] = new_role
+            print(f"Role updated to {new_role}.")
+        else:
+            print("Invalid role.")
+    
+    elif choice == "2":
+        if user['locked']:
+            user['locked'] = False
+            print("Account unlocked.")
+        else:
+            user['locked'] = True
+            print("Account locked.")
+    
+    elif choice == "3":
+        new_password = input("Enter new password: ")
+        confirm_password = input("Confirm new password: ")
+        
+        if new_password == confirm_password:
+            user['password'] = new_password
+            user['login_attempts'] = 0
+            user['locked'] = False
+            print("Password reset successfully.")
+        else:
+            print("Passwords do not match.")
+    
+    else:
+        print("Invalid choice.")
+def order_loop():
+    print("\nWelcome to WIL & HONEY Management System\n")
+    
+    # Login
+    current_user = None
+    while not current_user:
+        current_user = login()
+    
+    ordering = True
+    while ordering:
+        print("\n***** Main Menu *****\n")
+        
+        # Show different options based on user role
+        if current_user['role'] == 'manager':
+            print("1. View order history")
+            print("2. View inventory")
+            print("3. Restock item")
+            print("4. Check items needing restock")
+            print("5. Create supplier order")
+            print("6. Update supplier order status")
+            print("7. View supplier orders")
+            print("8. Generate supplier invoice")
+            print("9. Process supplier payment")
+            print("10. View supplier payment history")
+            print("11. View supplier performance")
+            print("12. Calculate optimal inventory levels")
+            print("13. Generate restock recommendations")
+            print("14. Modify user access")
+            print("15. Logout")
+        else:  # sales role
+            print("1. View order history")
+            print("2. View inventory")
+            print("3. Restock item")
+            print("4. Check items needing restock")
+            print("5. Create supplier order")
+            print("6. View supplier orders")
+            print("7. Generate restock recommendations")
+            print("8. Logout")
+        
+        response = input("\nPlease select an action: ")
+        
+        if current_user['role'] == 'manager':
+            if response == "1":
+                view_order_history()
+            elif response == "2":
+                view_inventory()
+            elif response == "3":
+                sku = input("Enter item SKU to restock: ")
+                try:
+                    quantity = int(input("Enter quantity to add: "))
+                    restock_item(sku, quantity)
+                except ValueError:
+                    print("Error: Invalid quantity entered.")
+            elif response == "4":
+                check_restock_needed()
+            elif response == "5":
+                create_supplier_order()
+            elif response == "6":
+                update_supplier_order_status()
+            elif response == "7":
+                view_supplier_orders()
+            elif response == "8":
+                generate_supplier_invoice()
+            elif response == "9":
+                process_supplier_payment()
+            elif response == "10":
+                view_supplier_payments()
+            elif response == "11":
+                view_supplier_performance()
+            elif response == "12":
+                calculate_optimal_inventory()
+            elif response == "13":
+                generate_restock_recommendations()
+            elif response == "14":
+                modify_user_access()
+            elif response == "15":
+                print("\nLogged out successfully.")
+                ordering = False
+        else:  # sales role
+            if response == "1":
+                view_order_history()
+            elif response == "2":
+                view_inventory()
+            elif response == "3":
+                sku = input("Enter item SKU to restock: ")
+                try:
+                    quantity = int(input("Enter quantity to add: "))
+                    restock_item(sku, quantity)
+                except ValueError:
+                    print("Error: Invalid quantity entered.")
+            elif response == "4":
+                check_restock_needed()
+            elif response == "5":
+                create_supplier_order()
+            elif response == "6":
+                view_supplier_orders()
+            elif response == "7":
+                generate_restock_recommendations()
+            elif response == "8":
+                print("\nLogged out successfully.")
+                ordering = False
+        
+        if response != "15" and response != "8":
+            input("\nPress Enter to continue...")
    item = MENU[sku]['Name']
         price = MENU[sku]['Price']
         stock = inventory[sku]['Stock']
